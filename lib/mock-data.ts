@@ -197,7 +197,6 @@ export const mockFooterMenu = [
 
 export const mockPages = [
   { slug: 'about', title: 'About' },
-  { slug: 'contact', title: 'Contact' },
 ]
 
 export const mockPosts = [

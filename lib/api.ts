@@ -2,6 +2,38 @@ import { WPPost, WPPage, WPCategory, WPMedia, CF7Response, Language, WPMenuItem,
 
 const API_URL = process.env.WORDPRESS_API_URL
 const SITE_URL = process.env.WORDPRESS_API_URL?.replace('/wp-json/wp/v2', '') || ''
+const WP_DOMAIN = SITE_URL.replace('https://', '').replace('http://', '')
+
+function proxyUrl(url: string): string {
+  if (!url || !WP_DOMAIN || !url.includes(WP_DOMAIN)) return url
+  return `/api/media/${Buffer.from(url).toString('base64')}`
+}
+
+function sanitizeContent(html: string): string {
+  if (!html || !WP_DOMAIN) return html
+  const regex = new RegExp(`https?://${WP_DOMAIN.replace('.', '\\.')}[^"'\\s]*\\.(jpg|jpeg|png|gif|webp|svg)`, 'gi')
+  return html.replace(regex, match => proxyUrl(match))
+}
+
+function sanitizePost<T extends WPPost | WPPage>(item: T): T {
+  const sanitized = { ...item }
+
+  if (sanitized.content?.rendered) {
+    sanitized.content = { rendered: sanitizeContent(sanitized.content.rendered) }
+  }
+
+  if (sanitized._embedded?.['wp:featuredmedia']?.[0]) {
+    sanitized._embedded = {
+      ...sanitized._embedded,
+      'wp:featuredmedia': sanitized._embedded['wp:featuredmedia'].map(media => ({
+        ...media,
+        source_url: proxyUrl(media.source_url),
+      })),
+    }
+  }
+
+  return sanitized
+}
 
 export async function getSiteInfo(): Promise<SiteInfo> {
   try {
@@ -21,7 +53,7 @@ export async function getSiteInfo(): Promise<SiteInfo> {
 async function getMediaUrl(id: number): Promise<string | null> {
   try {
     const media = await fetchAPI<WPMedia>(`/media/${id}`)
-    return media.source_url
+    return proxyUrl(media.source_url)
   } catch {
     return null
   }
@@ -69,7 +101,13 @@ async function fetchAPI<T>(endpoint: string, params?: Record<string, string>, in
   })
 
   if (!res.ok) throw new Error(`api error: ${res.status}`)
-  return res.json()
+
+  const text = await res.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    throw new Error(`invalid json response`)
+  }
 }
 
 export async function getPosts(perPage = 10, lang?: string): Promise<WPPost[]> {
@@ -85,18 +123,29 @@ export async function getPosts(perPage = 10, lang?: string): Promise<WPPost[]> {
   const res = await fetch(url.toString(), perPage > 20 ? { cache: 'no-store' } : { next: { revalidate: 60 } })
 
   if (!res.ok) throw new Error(`api error: ${res.status}`)
-  return res.json()
+
+  const text = await res.text()
+  try {
+    const posts: WPPost[] = JSON.parse(text)
+    return posts.map(sanitizePost)
+  } catch {
+    throw new Error(`invalid json response`)
+  }
 }
 
 export async function getPostBySlug(slug: string, lang?: string): Promise<WPPost | null> {
-  const params: Record<string, string> = {
-    slug,
-    _embed: 'true',
-  }
-  if (lang) params.lang = lang
+  try {
+    const params: Record<string, string> = {
+      slug,
+      _embed: 'true',
+    }
+    if (lang) params.lang = lang
 
-  const posts = await fetchAPI<WPPost[]>('/posts', params)
-  return posts[0] || null
+    const posts = await fetchAPI<WPPost[]>('/posts', params)
+    return posts[0] ? sanitizePost(posts[0]) : null
+  } catch {
+    return null
+  }
 }
 
 export async function getPostsByCategory(categoryId: number, perPage = 10, lang?: string): Promise<WPPost[]> {
@@ -107,7 +156,8 @@ export async function getPostsByCategory(categoryId: number, perPage = 10, lang?
   }
   if (lang) params.lang = lang
 
-  return fetchAPI<WPPost[]>('/posts', params)
+  const posts = await fetchAPI<WPPost[]>('/posts', params)
+  return posts.map(sanitizePost)
 }
 
 export async function getPages(lang?: string): Promise<WPPage[]> {
@@ -123,18 +173,29 @@ export async function getPages(lang?: string): Promise<WPPage[]> {
   const res = await fetch(url.toString(), { cache: 'no-store' })
 
   if (!res.ok) throw new Error(`api error: ${res.status}`)
-  return res.json()
+
+  const text = await res.text()
+  try {
+    const pages: WPPage[] = JSON.parse(text)
+    return pages.map(sanitizePost)
+  } catch {
+    throw new Error(`invalid json response`)
+  }
 }
 
 export async function getPageBySlug(slug: string, lang?: string): Promise<WPPage | null> {
-  const params: Record<string, string> = {
-    slug,
-    _embed: 'true',
-  }
-  if (lang) params.lang = lang
+  try {
+    const params: Record<string, string> = {
+      slug,
+      _embed: 'true',
+    }
+    if (lang) params.lang = lang
 
-  const pages = await fetchAPI<WPPage[]>('/pages', params)
-  return pages[0] || null
+    const pages = await fetchAPI<WPPage[]>('/pages', params)
+    return pages[0] ? sanitizePost(pages[0]) : null
+  } catch {
+    return null
+  }
 }
 
 export async function getCategories(lang?: string): Promise<WPCategory[]> {
@@ -149,7 +210,11 @@ export async function getCategories(lang?: string): Promise<WPCategory[]> {
 
 export async function getMedia(id: number): Promise<WPMedia | null> {
   try {
-    return await fetchAPI<WPMedia>(`/media/${id}`)
+    const media = await fetchAPI<WPMedia>(`/media/${id}`)
+    return {
+      ...media,
+      source_url: proxyUrl(media.source_url),
+    }
   } catch {
     return null
   }
@@ -163,7 +228,8 @@ export async function searchPosts(query: string, lang?: string): Promise<WPPost[
   }
   if (lang) params.lang = lang
 
-  return fetchAPI<WPPost[]>('/posts', params)
+  const posts = await fetchAPI<WPPost[]>('/posts', params)
+  return posts.map(sanitizePost)
 }
 
 export async function submitCF7Form(formId: number, data: FormData): Promise<CF7Response> {

@@ -16,8 +16,14 @@ export async function generateStaticParams() {
     return mockPages.map(page => ({ slug: page.slug }))
   }
 
-  const pages = await getPages()
-  return pages.map(page => ({ slug: page.slug }))
+  try {
+    const pages = await getPages()
+    return pages
+      .filter(page => page.slug !== 'contact')
+      .map(page => ({ slug: page.slug }))
+  } catch {
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: Props) {

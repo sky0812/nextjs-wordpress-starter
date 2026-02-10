@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { submitCF7Form } from '@/lib/api'
 import { CF7Response } from '@/lib/types'
 
 interface Props {
-  formId: number
   recaptchaSiteKey?: string
 }
 
@@ -18,7 +16,7 @@ declare global {
   }
 }
 
-export function ContactForm({ formId, recaptchaSiteKey }: Props) {
+export function ContactForm({ recaptchaSiteKey }: Props) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [message, setMessage] = useState('')
@@ -68,7 +66,8 @@ export function ContactForm({ formId, recaptchaSiteKey }: Props) {
     }
 
     try {
-      const res: CF7Response = await submitCF7Form(formId, formData)
+      const response = await fetch('/api/contact', { method: 'POST', body: formData })
+      const res: CF7Response = await response.json()
 
       if (res.status === 'mail_sent') {
         setStatus('sent')
