@@ -27,6 +27,17 @@ USE_MOCK_DATA=false
 
 set `USE_MOCK_DATA=true` to use mock data instead of wordpress api (for demo/development)
 
+## security
+
+wordpress url is completely hidden from the browser:
+
+- all api calls happen server-side only
+- images are proxied through `/api/media/[encoded-url]`
+- contact form submissions go through `/api/contact`
+- no wordpress domain visible in network requests or html source
+
+the `WORDPRESS_API_URL` env var has no `NEXT_PUBLIC_` prefix, keeping it server-side only.
+
 ## structure
 
 ```
@@ -34,6 +45,9 @@ theme.json               - wp design tokens (colors, fonts)
 tailwind.config.js       - reads theme.json
 
 app/
+  api/
+    contact/           - proxies cf7 form submissions
+    media/[url]/       - proxies wp images (hides domain)
   page.tsx             - home
   posts/               - blog with filters
   posts/[slug]/        - single post (ssg)
@@ -68,9 +82,10 @@ components/
   contact-form.tsx     - cf7 + recaptcha
 
 lib/
-  api.ts               - wordpress api + plugins
+  api.ts               - wordpress api + url sanitization
   types.ts             - wp types
   seo.ts               - yoast meta helper
+  mock-data.ts         - demo data for development
 ```
 
 ## components
