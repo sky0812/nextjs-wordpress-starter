@@ -6,6 +6,10 @@ import { Footer } from '@/components/footer'
 export const metadata: Metadata = {
   title: 'Next.js + WordPress',
   description: 'Headless WordPress with Next.js',
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 export default function RootLayout({
