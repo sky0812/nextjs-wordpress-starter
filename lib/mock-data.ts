@@ -68,6 +68,7 @@ export const mockHomepageSections: FlexibleSection[] = [
         icon: '🤖',
         title: 'AI TLDR',
         description: 'Every post card ships with an auto-generated 2-sentence summary. Powered by Gemini, cached in memory.',
+        highlighted: true,
       },
     ],
   },

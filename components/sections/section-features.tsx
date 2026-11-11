@@ -23,7 +23,25 @@ export function SectionFeaturesComponent({ data }: Props) {
           </div>
         )}
         <div className={`grid gap-8 ${gridCols[columns]}`}>
-          {features.map((feature, i) => (
+          {features.map((feature, i) => feature.highlighted ? (
+            <div
+              key={i}
+              className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary-600 to-primary-700 p-6 shadow-xl ring-1 ring-primary-400 transition hover:-translate-y-1 hover:shadow-2xl"
+            >
+              <div className="absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/10 blur-xl" />
+              <div className="absolute top-3 right-3 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-700">
+                New
+              </div>
+              {feature.icon && (
+                <div
+                  className="relative mb-4 text-3xl"
+                  dangerouslySetInnerHTML={{ __html: feature.icon }}
+                />
+              )}
+              <h3 className="relative text-lg font-semibold text-white">{feature.title}</h3>
+              <p className="relative mt-2 text-sm text-primary-50">{feature.description}</p>
+            </div>
+          ) : (
             <div key={i} className="rounded-xl bg-white p-6 shadow-sm">
               {feature.icon && (
                 <div

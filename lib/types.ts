@@ -191,6 +191,7 @@ export interface SectionFeatures {
     icon?: string
     title: string
     description: string
+    highlighted?: boolean
   }>
   columns?: 2 | 3 | 4
 }
