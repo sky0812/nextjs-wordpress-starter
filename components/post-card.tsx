@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { WPPost } from '@/lib/types'
+import { PostSummary } from './post-summary'
 
 interface Props {
   post: WPPost
@@ -37,6 +38,7 @@ export function PostCard({ post }: Props) {
           dangerouslySetInnerHTML={{ __html: post.excerpt.rendered }}
         />
       </Link>
+      <PostSummary postId={post.id} title={post.title.rendered} content={post.content?.rendered || post.excerpt.rendered} />
     </article>
   )
 }

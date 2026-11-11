@@ -64,6 +64,11 @@ export const mockHomepageSections: FlexibleSection[] = [
         title: 'Pre-built Components',
         description: 'Heroes, sliders, forms, and flexible content sections ready to use.',
       },
+      {
+        icon: '🤖',
+        title: 'AI TLDR',
+        description: 'Every post card ships with an auto-generated 2-sentence summary. Powered by Gemini, cached in memory.',
+      },
     ],
   },
   {
