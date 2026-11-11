@@ -86,7 +86,7 @@ export async function Footer({ menuSlug = 'footer-menu', secondaryMenuSlug = 'le
         </div>
 
         <div className="mt-12 border-t border-dark-700 pt-8 text-center text-sm">
-          © 2025 {siteInfo.name}
+          © {new Date().getFullYear()} {siteInfo.name}
         </div>
       </div>
     </footer>

@@ -32,7 +32,7 @@ export const mockHomepageSections: FlexibleSection[] = [
     acf_fc_layout: 'features',
     heading: 'Everything you need',
     subheading: 'A complete toolkit for building headless WordPress sites with modern frontend technology.',
-    columns: 3,
+    columns: 4,
     features: [
       {
         icon: '⚡',
